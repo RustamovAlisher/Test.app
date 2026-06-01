@@ -20,8 +20,6 @@ public class QuestionMapper {
 
     private final VariantMapper variantMapper;
 
-
-    // DTO -> Entity (savol yaratishda)
     public Question toEntity(CreateQuestionRequest request) {
         Question question = Question.builder()
                 .text(request.text())
@@ -37,8 +35,6 @@ public class QuestionMapper {
         return question;
     }
 
-
-    // Entity -> Response (admin uchun, isCorrect ko'rinadi)
     public QuestionResponse toResponse(Question question) {
         List<VariantResponse> variantResponses = new ArrayList<>();
         for (Variant variant : question.getVariants()) {
@@ -53,8 +49,6 @@ public class QuestionMapper {
         );
     }
 
-
-    // Entity -> User Response (user uchun, isCorrect yashirin)
     public QuestionForUserResponse toUserResponse(Question question) {
         List<VariantForUserResponse> variantResponses = new ArrayList<>();
         for (Variant variant : question.getVariants()) {

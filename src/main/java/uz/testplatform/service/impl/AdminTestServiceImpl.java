@@ -28,8 +28,6 @@ public class AdminTestServiceImpl implements AdminTestService {
     private final QuestionRepository questionRepository;
     private final TestMapper testMapper;
 
-
-    // Yangi test yaratish (savolsiz)
     @Override
     public TestResponse createTest(CreateTestRequest request) {
 
@@ -39,13 +37,10 @@ public class AdminTestServiceImpl implements AdminTestService {
         Test savedTest = testRepository.save(test);
 
         log.info("Test yaratildi: id={}, title={}", savedTest.getId(), savedTest.getTitle());
-
-        // Yangi test - hali savol yo'q, statistika 0
         return buildTestResponse(savedTest);
     }
 
 
-    // Testni tahrirlash
     @Override
     public TestResponse updateTest(Long testId, UpdateTestRequest request) {
 
@@ -70,8 +65,6 @@ public class AdminTestServiceImpl implements AdminTestService {
         return buildTestResponse(updatedTest);
     }
 
-
-    // Testni o'chirish
     @Override
     public void deleteTest(Long testId) {
 
@@ -87,8 +80,6 @@ public class AdminTestServiceImpl implements AdminTestService {
         log.info("Test o'chirildi: id={}", testId);
     }
 
-
-    // Barcha testlar ro'yxati (pagination, savolsiz)
     @Override
     public Page<TestSummaryResponse> getAllTests(Pageable pageable) {
 
@@ -104,8 +95,6 @@ public class AdminTestServiceImpl implements AdminTestService {
         return responsePage;
     }
 
-
-    // Bitta testni ko'rish (statistika bilan)
     @Override
     public TestResponse getTestById(Long testId) {
 
@@ -120,11 +109,7 @@ public class AdminTestServiceImpl implements AdminTestService {
         return buildTestResponse(test);
     }
 
-
-    // Helper - test javobini statistika bilan tayyorlash
     private TestResponse buildTestResponse(Test test) {
-
-        // Har darajadagi savollar sonini hisoblash (3 ta COUNT so'rovi)
         long easyAvailable = questionRepository.countByTestIdAndLevel(test.getId(), TestLevel.EASY);
         long mediumAvailable = questionRepository.countByTestIdAndLevel(test.getId(), TestLevel.MEDIUM);
         long hardAvailable = questionRepository.countByTestIdAndLevel(test.getId(), TestLevel.HARD);

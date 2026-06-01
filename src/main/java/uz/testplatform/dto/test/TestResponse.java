@@ -11,7 +11,6 @@ public record TestResponse(
         Integer hardCount,
         LocalDateTime createdAt,
 
-        // Statistika — bankda nechta savol bor
         Long easyAvailable,
         Long mediumAvailable,
         Long hardAvailable,

@@ -24,8 +24,6 @@ import java.security.Principal;
 public class UserTestController {
 
     private final UserTestService userTestService;
-
-
     @Operation(summary = "Mavjud testlar ro'yxati")
     @GetMapping
     public ResponseEntity<Page<TestSummaryResponse>> getAvailableTests(
@@ -35,7 +33,6 @@ public class UserTestController {
         Pageable pageable = PageRequest.of(page, size);
         return ResponseEntity.ok(userTestService.getAvailableTests(pageable));
     }
-
 
     @Operation(summary = "Testni boshlash - savollar generatsiya bo'ladi")
     @PostMapping("/{id}/start")
@@ -47,7 +44,6 @@ public class UserTestController {
         return ResponseEntity.ok(userTestService.startTest(id, userEmail));
     }
 
-
     @Operation(summary = "Javoblarni jo'natish - score hisoblanadi")
     @PostMapping("/submit")
     public ResponseEntity<ResultShort> submitTest(
@@ -57,7 +53,6 @@ public class UserTestController {
         String userEmail = principal.getName();
         return ResponseEntity.ok(userTestService.submitTest(request, userEmail));
     }
-
 
     @Operation(summary = "Mening natijalarim")
     @GetMapping("/my-results")

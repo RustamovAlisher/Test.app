@@ -23,13 +23,11 @@ public class AuthController {
 
     private final AuthService authService;
 
-
     @Operation(summary = "Ro'yxatdan o'tish")
     @PostMapping("/register")
     public ResponseEntity<UserResponse> register(@Valid @RequestBody RegisterRequest request) {
         return ResponseEntity.ok(authService.register(request));
     }
-
 
     @Operation(summary = "Login - JWT token qaytaradi")
     @PostMapping("/login")
@@ -37,20 +35,17 @@ public class AuthController {
         return ResponseEntity.ok(authService.login(request));
     }
 
-
     @Operation(summary = "Email o'zgartirish so'rovi (login bo'lgan user)")
     @PostMapping("/change-email")
     public ResponseEntity<String> changeEmail(
             @Valid @RequestBody ChangeEmailRequest request,
             Principal principal) {
 
-        // Principal'dan hozirgi user email keladi (JWT token'dan)
         String currentEmail = principal.getName();
         authService.changeEmail(request, currentEmail);
 
         return ResponseEntity.ok("Tasdiqlash linki yangi emailga yuborildi");
     }
-
 
     @Operation(summary = "Email tasdiqlash (link orqali)")
     @GetMapping("/confirm-email")

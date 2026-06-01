@@ -12,11 +12,8 @@ import java.util.Optional;
 @Repository
 public interface QuestionRepository extends JpaRepository<Question, Long> {
 
-    // Test bo'yicha daraja sonini hisoblash (statistika uchun)
     long countByTestIdAndLevel(Long testId, TestLevel level);
 
-
-    // Test bo'yicha ma'lum darajadagi savollarni variantlari bilan olish
     @Query("""
         SELECT q FROM Question q
         LEFT JOIN FETCH q.variants
@@ -24,8 +21,6 @@ public interface QuestionRepository extends JpaRepository<Question, Long> {
     """)
     List<Question> findByTestIdAndLevelWithVariants(Long testId, TestLevel level);
 
-
-    // Bitta savolni variantlari bilan olish
     @Query("""
         SELECT q FROM Question q
         LEFT JOIN FETCH q.variants
@@ -33,8 +28,6 @@ public interface QuestionRepository extends JpaRepository<Question, Long> {
     """)
     Optional<Question> findByIdWithVariants(Long id);
 
-
-    // YANGI - Daraja bo'yicha RANDOM savol tanlash (user test boshlaganda)
     @Query(value = """
         SELECT * FROM questions q
         WHERE q.test_id = :testId AND q.level = :level

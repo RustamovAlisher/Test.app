@@ -19,8 +19,6 @@ public class UserMapper {
                 .passportCode(request.passportCode())
                 .build();
     }
-
-
     public UserResponse toResponse(User user) {
         return new UserResponse(
                 user.getId(),

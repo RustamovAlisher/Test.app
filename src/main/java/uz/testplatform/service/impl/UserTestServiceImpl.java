@@ -43,10 +43,6 @@ public class UserTestServiceImpl implements UserTestService {
     private final TestMapper testMapper;
     private final ResultMapper resultMapper;
 
-
-    // ============================================================
-    // 1. Testlar ro'yxati (user uchun, qisqa, savolsiz)
-    // ============================================================
     @Override
     public Page<TestSummaryResponse> getAvailableTests(Pageable pageable) {
 
@@ -61,53 +57,35 @@ public class UserTestServiceImpl implements UserTestService {
         return responsePage;
     }
 
-
-    // ============================================================
-    // 2. Test boshlash - savollar generatsiya bo'ladi
-    // ============================================================
     @Override
     public TestStartResponse startTest(Long testId, String userEmail) {
 
         log.info("Test boshlash: testId={}, user={}", testId, userEmail);
-
-        // 1. Userni topish
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new NotFoundException("Foydalanuvchi topilmadi"));
-
-        // 2. Testni topish
         Test test = testRepository.findById(testId)
                 .orElseThrow(() -> {
                     log.warn("Test topilmadi: id={}", testId);
                     return new NotFoundException("Test topilmadi");
                 });
-
-        // 3. Bazadan har darajadagi savollarni hisoblash (test tayyormi?)
         long easyAvailable = questionRepository.countByTestIdAndLevel(testId, TestLevel.EASY);
         long mediumAvailable = questionRepository.countByTestIdAndLevel(testId, TestLevel.MEDIUM);
         long hardAvailable = questionRepository.countByTestIdAndLevel(testId, TestLevel.HARD);
         long totalAvailable = easyAvailable + mediumAvailable + hardAvailable;
 
         int requiredTotal = test.getEasyCount() + test.getMediumCount() + test.getHardCount();
-
-        // 4. Umumiy savollar yetadimi?
         if (totalAvailable < requiredTotal) {
             log.warn("Test tayyor emas: testId={}, kerak={}, bor={}",
                     testId, requiredTotal, totalAvailable);
             throw new RequestException("Test hali tayyor emas, keyinroq urinib ko'ring");
         }
-
-        // 5. Savollarni generatsiya qilish (fallback bilan)
         List<Question> selectedQuestions = generateQuestions(
                 test,
                 (int) easyAvailable,
                 (int) mediumAvailable,
                 (int) hardAvailable
         );
-
-        // 6. Savollarni aralashtirish (har user uchun boshqa tartib)
         Collections.shuffle(selectedQuestions);
-
-        // 7. Result entity yaratish (hozir test boshlandi)
         Result result = Result.builder()
                 .user(user)
                 .test(test)
@@ -117,8 +95,6 @@ public class UserTestServiceImpl implements UserTestService {
                 .startedAt(LocalDateTime.now())
                 .finishedAt(null)
                 .build();
-
-        // 8. Har savol uchun UserAnswer yaratish (boshida bo'sh, javob yo'q)
         for (Question question : selectedQuestions) {
             UserAnswer answer = UserAnswer.builder()
                     .result(result)
@@ -129,36 +105,25 @@ public class UserTestServiceImpl implements UserTestService {
 
             result.getAnswers().add(answer);
         }
-
-        // 9. Result va UserAnswer'larni saqlash (cascade)
-        // 9. Result va UserAnswer'larni saqlash (cascade)
         Result savedResult = resultRepository.save(result);
 
-        // >>> SHU YERGA YANGI QISM QO'SHILDI (N+1 optimizatsiyasi) >>>
         List<Long> selectedIds = new ArrayList<>();
         for (Question q : selectedQuestions) {
             selectedIds.add(q.getId());
         }
         List<Question> questionsWithVariants = questionRepository.findWithVariants(selectedIds);
-        // <<< SHU YERGACHA <<<
-
         log.info("Test boshlandi: resultId={}, savollar soni={}",
                 savedResult.getId(), questionsWithVariants.size()); // questionsWithVariants bo'ldi
 
-        // 10. User uchun javob tayyorlash (variantlar ham aralashgan)
         List<QuestionForUserResponse> questionResponses = new ArrayList<>();
         for (Question question : questionsWithVariants) { // selectedQuestions o'rniga questionsWithVariants bo'ldi
-
-            // Variantlarni aralashtirish (har user uchun)
             List<Variant> shuffledVariants = new ArrayList<>(question.getVariants());
             Collections.shuffle(shuffledVariants);
 
-            // Vaqtinchalik question yaratamiz aralashgan variantlar bilan
             Question tempQuestion = new Question();
             tempQuestion.setId(question.getId());
             tempQuestion.setText(question.getText());
             tempQuestion.setVariants(shuffledVariants);
-
             questionResponses.add(questionMapper.toUserResponse(tempQuestion));
         }
 
@@ -171,9 +136,7 @@ public class UserTestServiceImpl implements UserTestService {
         );
 
     }
-    // ============================================================
-    // Helper - savollarni generatsiya qilish (fallback bilan)
-    // ============================================================
+
     private List<Question> generateQuestions(
             Test test,
             int easyAvailable,
@@ -189,7 +152,6 @@ public class UserTestServiceImpl implements UserTestService {
         int needMedium = test.getMediumCount();
         int needHard = test.getHardCount();
 
-        // ============ HARD ============
         int hardToTake;
         int hardShortage = 0;
 
@@ -203,8 +165,6 @@ public class UserTestServiceImpl implements UserTestService {
                     needHard, hardAvailable, hardShortage);
         }
 
-        // ============ MEDIUM ============
-        // Medium talab = asl talab + HARD dan kelgan kamomad
         int mediumNeedTotal = needMedium + hardShortage;
         int mediumToTake;
         int mediumShortage = 0;
@@ -217,9 +177,6 @@ public class UserTestServiceImpl implements UserTestService {
             log.info("MEDIUM yetishmadi: kerak={}, bor={}, kamomad={} (EASY ga o'tadi)",
                     mediumNeedTotal, mediumAvailable, mediumShortage);
         }
-
-        // ============ EASY ============
-        // Easy talab = asl talab + MEDIUM dan kelgan kamomad
         int easyNeedTotal = needEasy + mediumShortage;
         int easyToTake;
         int easyShortage = 0;
@@ -232,9 +189,6 @@ public class UserTestServiceImpl implements UserTestService {
             log.info("EASY yetishmadi: kerak={}, bor={}, kamomad={} (yuqoriga - MEDIUM/HARD)",
                     easyNeedTotal, easyAvailable, easyShortage);
         }
-
-        // ============ EASY YETISHMASA - YUQORIGA KO'TARILISH ============
-        // EASY kam bo'lsa va medium/hard'da zaxira bo'lsa - qo'shamiz
         if (easyShortage > 0) {
             int mediumExtra = mediumAvailable - mediumToTake;
             int hardExtra = hardAvailable - hardToTake;
@@ -263,8 +217,6 @@ public class UserTestServiceImpl implements UserTestService {
                 log.info("EASY kamomad HARD dan to'ldirildi: {} ta", addFromHard);
             }
         }
-
-        // ============ Yakuniy tekshirish ============
         int totalSelected = easyToTake + mediumToTake + hardToTake;
         int totalRequired = needEasy + needMedium + needHard;
 
@@ -273,7 +225,6 @@ public class UserTestServiceImpl implements UserTestService {
             throw new RequestException("Test hali tayyor emas, keyinroq urinib ko'ring");
         }
 
-        // ============ Bazadan RANDOM tanlash ============
         List<Question> result = new ArrayList<>();
 
         if (easyToTake > 0) {
@@ -300,27 +251,16 @@ public class UserTestServiceImpl implements UserTestService {
         return result;
     }
 
-
-    // ============================================================
-    // 3. Test javoblarini jo'natish - score hisoblanadi
-    // ============================================================
     @Override
     public ResultShort submitTest(SubmitRequest request, String userEmail) {
-
         log.info("Test submit: resultId={}, user={}", request.resultId(), userEmail);
-
-        // 1. Userni topish
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new NotFoundException("Foydalanuvchi topilmadi"));
-
-        // 2. Result'ni javoblari bilan birga olish (JOIN FETCH)
         Result result = resultRepository.findByIdWithAnswers(request.resultId())
                 .orElseThrow(() -> {
                     log.warn("Result topilmadi: id={}", request.resultId());
                     return new NotFoundException("Test natijasi topilmadi");
                 });
-
-        // 3. Bu user'ning result'imi tekshirish (xavfsizlik)
         if (!result.getUser().getId().equals(user.getId())) {
             log.warn("Boshqa userning result'iga urinish: resultId={}, user={}",
                     request.resultId(), userEmail);
@@ -340,14 +280,8 @@ public class UserTestServiceImpl implements UserTestService {
         if (timeExpired) {
             log.info("Vaqt tugagan: resultId={}, javoblar baribir qabul qilinadi", request.resultId());
         }
-
-        // 6. Har userAnswer ni yangilash
         int correctCount = 0;
-
-        // Result'dagi har UserAnswer uchun
         for (UserAnswer userAnswer : result.getAnswers()) {
-
-            // Bu savol uchun user javob bermi?
             SubmitRequest.UserAnswer foundAnswer = null;
 
             for (SubmitRequest.UserAnswer submitted : request.answers()) {
@@ -356,15 +290,12 @@ public class UserTestServiceImpl implements UserTestService {
                     break;
                 }
             }
-
-            // Agar javob bermagan bo'lsa - noto'g'ri (boshida shunday qolavergan)
             if (foundAnswer == null) {
                 userAnswer.setSelectedVariant(null);
                 userAnswer.setCorrect(false);
                 continue;
             }
 
-            // Tanlangan variantni topish
             Variant selectedVariant = null;
             for (Variant variant : userAnswer.getQuestion().getVariants()) {
                 if (variant.getId().equals(foundAnswer.selectedVariantId())) {
@@ -372,8 +303,6 @@ public class UserTestServiceImpl implements UserTestService {
                     break;
                 }
             }
-
-            // Variant topilmasa - cheating (bu savolga noto'g'ri variant ID yuborilgan)
             if (selectedVariant == null) {
                 log.warn("Variant topilmadi: questionId={}, variantId={}",
                         foundAnswer.questionId(), foundAnswer.selectedVariantId());
@@ -382,7 +311,6 @@ public class UserTestServiceImpl implements UserTestService {
                 continue;
             }
 
-            // Javobni saqlash
             userAnswer.setSelectedVariant(selectedVariant);
             userAnswer.setCorrect(selectedVariant.getIsCorrect());
 
@@ -391,10 +319,7 @@ public class UserTestServiceImpl implements UserTestService {
             }
         }
 
-        // 7. Score hisoblash (foiz)
         int score = (correctCount * 100) / result.getTotalQuestions();
-
-        // 8. Result yangilash
         result.setCorrectAnswers(correctCount);
         result.setScore(score);
         result.setFinishedAt(LocalDateTime.now());
@@ -408,21 +333,14 @@ public class UserTestServiceImpl implements UserTestService {
     }
 
 
-    // ============================================================
-    // 4. User o'z natijalarini ko'rish
-    // ============================================================
     @Override
     public Page<ResultShort> getMyResults(String userEmail, Pageable pageable) {
-
-        log.info("User natijalarini olish: user={}", userEmail);
-
+        log.info("user natijalarini olish: user={}", userEmail);
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new NotFoundException("Foydalanuvchi topilmadi"));
-
-        Page<Result> resultPage = resultRepository.findByUserIdWithTest(user.getId(), pageable);        Page<ResultShort> responsePage = resultPage.map(resultMapper::toShort);
-
+        Page<Result> resultPage = resultRepository.findByUserIdWithTest(user.getId(), pageable);
+        Page<ResultShort> responsePage = resultPage.map(resultMapper::toShort);
         log.info("Topilgan natijalar soni: {}", responsePage.getNumberOfElements());
-
         return responsePage;
     }
 }

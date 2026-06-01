@@ -9,15 +9,12 @@ import uz.testplatform.entity.Variant;
 
 @Component
 public class VariantMapper {
-
-
     public Variant toEntity(CreateVariantRequest request) {
         return Variant.builder()
                 .text(request.text())
                 .isCorrect(request.isCorrect())
                 .build();
     }
-
 
     public VariantResponse toResponse(Variant variant) {
         return new VariantResponse(
@@ -26,7 +23,6 @@ public class VariantMapper {
                 variant.getIsCorrect()
         );
     }
-
 
     public VariantForUserResponse toUserResponse(Variant variant) {
         return new VariantForUserResponse(

@@ -27,28 +27,23 @@ import java.time.format.DateTimeFormatter;
 public class PdfServiceImpl implements PdfService {
 
     private final ResultRepository resultRepository;
-
     private static final DateTimeFormatter DATE_FORMAT =
             DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
 
 
     @Override
     public byte[] generateResultPdf(String resultCode, String userEmail) {
-
         log.info("PDF yaratish: resultCode={}, user={}", resultCode, userEmail);
-
         Result result = resultRepository.findByResultCode(resultCode)
                 .orElseThrow(() -> {
                     log.warn("Natija topilmadi: resultCode={}", resultCode);
                     return new NotFoundException("Natija topilmadi");
                 });
-
         if (!result.getUser().getEmail().equals(userEmail)) {
             log.warn("Boshqa userning natijasiga urinish: resultCode={}, user={}",
                     resultCode, userEmail);
             throw new RequestException("Bu natija sizga tegishli emas");
         }
-
         if (result.getFinishedAt() == null) {
             throw new RequestException("Test hali tugatilmagan");
         }
@@ -68,8 +63,6 @@ public class PdfServiceImpl implements PdfService {
         Document document = new Document(PageSize.A4, 40, 40, 50, 50);
         PdfWriter.getInstance(document, outputStream);
         document.open();
-
-        // Shriftlar
         Font titleFont = new Font(Font.HELVETICA, 20, Font.BOLD,
                 new Color(33, 37, 41));
         Font headerFont = new Font(Font.HELVETICA, 13, Font.BOLD,
@@ -80,8 +73,6 @@ public class PdfServiceImpl implements PdfService {
                 new Color(108, 117, 125));
         Font scoreFont = new Font(Font.HELVETICA, 36, Font.BOLD,
                 getScoreColor(result.getScore()));
-
-        // ===== SARLAVHA =====
         Paragraph title = new Paragraph("TEST NATIJASI", titleFont);
         title.setAlignment(Element.ALIGN_CENTER);
         title.setSpacingAfter(5);
@@ -94,8 +85,6 @@ public class PdfServiceImpl implements PdfService {
 
         document.add(new Chunk(new com.lowagie.text.pdf.draw.LineSeparator()));
         document.add(Chunk.NEWLINE);
-
-        // ===== USER MA'LUMOTLARI =====
         String fullName = result.getUser().getFirstName()
                 + " "
                 + result.getUser().getLastName();
@@ -110,23 +99,17 @@ public class PdfServiceImpl implements PdfService {
         addTableRow(userTable, "Natija kodi:", result.getResultCode(), labelFont, normalFont);
 
         document.add(userTable);
-
-        // ===== NATIJA SCORE =====
         Paragraph scoreLabel = new Paragraph("NATIJA", labelFont);
         scoreLabel.setAlignment(Element.ALIGN_CENTER);
         document.add(scoreLabel);
-
         Paragraph scorePara = new Paragraph(result.getScore() + "%", scoreFont);
         scorePara.setAlignment(Element.ALIGN_CENTER);
         scorePara.setSpacingAfter(10);
         document.add(scorePara);
-
-        // ===== BATAFSIL NATIJA =====
         PdfPTable resultTable = new PdfPTable(2);
         resultTable.setWidthPercentage(60);
         resultTable.setHorizontalAlignment(Element.ALIGN_CENTER);
         resultTable.setSpacingAfter(20);
-
         addTableRow(resultTable, "Jami savollar:",
                 result.getTotalQuestions() + " ta", labelFont, normalFont);
         addTableRow(resultTable, "To'g'ri javoblar:",
@@ -136,8 +119,6 @@ public class PdfServiceImpl implements PdfService {
                 labelFont, normalFont);
 
         document.add(resultTable);
-
-        // ===== VAQT MA'LUMOTLARI =====
         document.add(new Chunk(new com.lowagie.text.pdf.draw.LineSeparator()));
         document.add(Chunk.NEWLINE);
 

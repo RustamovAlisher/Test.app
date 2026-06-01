@@ -29,36 +29,23 @@ public class AdminQuestionServiceImpl implements AdminQuestionService {
     private final TestRepository testRepository;
     private final QuestionMapper questionMapper;
 
-
-    // Testga yangi savol qo'shish
     @Override
     public QuestionResponse addQuestion(Long testId, CreateQuestionRequest request) {
 
         log.info("Testga savol qo'shish: testId={}, level={}", testId, request.level());
-
-        // 1. Test mavjudligini tekshirish
         Test test = testRepository.findById(testId)
                 .orElseThrow(() -> {
                     log.warn("Test topilmadi: id={}", testId);
                     return new NotFoundException("Test topilmadi");
                 });
 
-        // 2. DTO ni Entity ga aylantirish (variantlar bilan)
         Question question = questionMapper.toEntity(request);
-
-        // 3. Savolni testga bog'lash
         question.setTest(test);
-
-        // 4. Saqlash (variantlar ham CASCADE bilan saqlanadi)
         Question savedQuestion = questionRepository.save(question);
-
         log.info("Savol qo'shildi: id={}, testId={}", savedQuestion.getId(), testId);
-
         return questionMapper.toResponse(savedQuestion);
     }
 
-
-    // Savolni tahrirlash (faqat text va level)
     @Override
     public QuestionResponse updateQuestion(Long questionId, UpdateQuestionRequest request) {
 
@@ -80,8 +67,6 @@ public class AdminQuestionServiceImpl implements AdminQuestionService {
         return questionMapper.toResponse(updatedQuestion);
     }
 
-
-    // Savolni o'chirish
     @Override
     public void deleteQuestion(Long questionId) {
 
@@ -97,26 +82,19 @@ public class AdminQuestionServiceImpl implements AdminQuestionService {
         log.info("Savol o'chirildi: id={}", questionId);
     }
 
-
-    // Test bo'yicha barcha savollar (admin uchun, daraja bilan)
     @Override
     public List<QuestionResponse> getQuestionsByTest(Long testId) {
 
         log.info("Test savollari so'raldi: testId={}", testId);
-
-        // Test mavjudligini tekshirish
         if (!testRepository.existsById(testId)) {
             log.warn("Test topilmadi: id={}", testId);
             throw new NotFoundException("Test topilmadi");
         }
-
-        // Har darajadagi savollarni olish (variantlari bilan)
         List<Question> allQuestions = new ArrayList<>();
         allQuestions.addAll(questionRepository.findByTestIdAndLevelWithVariants(testId, TestLevel.EASY));
         allQuestions.addAll(questionRepository.findByTestIdAndLevelWithVariants(testId, TestLevel.MEDIUM));
         allQuestions.addAll(questionRepository.findByTestIdAndLevelWithVariants(testId, TestLevel.HARD));
 
-        // Response ga aylantirish
         List<QuestionResponse> responses = new ArrayList<>();
         for (Question question : allQuestions) {
             responses.add(questionMapper.toResponse(question));

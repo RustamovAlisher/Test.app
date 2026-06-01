@@ -17,13 +17,7 @@ import uz.testplatform.mapper.ResultMapper;
 
 import java.security.Principal;
 
-/**
- * PDF va QR Controller.
- *
- * Endpoint'lar:
- *   GET /results/{resultCode}/pdf     → PDF yuklab olish
- *   GET /results/verify/{resultCode}  → Natijani ko'rish (QR orqali)
- */
+
 @RestController
 @RequestMapping("/results")
 @RequiredArgsConstructor
@@ -39,13 +33,8 @@ public class PdfController {
     public ResponseEntity<byte[]> downloadPdf(
             @PathVariable String resultCode,
             Principal principal) {
-
         String userEmail = principal.getName();
-
-        // PDF yaratish
         byte[] pdfBytes = pdfService.generateResultPdf(resultCode, userEmail);
-
-        // PDF fayl nomi
         String fileName = "natija-" + resultCode.substring(0, 8) + ".pdf";
 
         return ResponseEntity.ok()

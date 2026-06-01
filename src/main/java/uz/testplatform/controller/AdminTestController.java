@@ -15,9 +15,7 @@ import uz.testplatform.dto.test.TestSummaryResponse;
 import uz.testplatform.dto.test.UpdateTestRequest;
 import uz.testplatform.service.AdminTestService;
 
-/**
- * Admin Test Controller — test boshqaruvi (savolsiz).
- */
+
 @RestController
 @RequestMapping("/admin/tests")
 @RequiredArgsConstructor
@@ -26,14 +24,12 @@ public class AdminTestController {
 
     private final AdminTestService adminTestService;
 
-
     @Operation(summary = "Yangi test yaratish (savolsiz)")
     @PostMapping
     public ResponseEntity<TestResponse> createTest(@Valid @RequestBody CreateTestRequest request) {
         TestResponse response = adminTestService.createTest(request);
         return ResponseEntity.ok(response);
     }
-
 
     @Operation(summary = "Testni tahrirlash")
     @PutMapping("/{id}")

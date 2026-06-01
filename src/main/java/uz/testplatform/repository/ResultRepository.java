@@ -12,10 +12,7 @@ import java.util.Optional;
 @Repository
 public interface ResultRepository extends JpaRepository<Result, Long> {
 
-    /**
-     * Submit qilganda - Result + Answers + Questions birga.
-     * Variants @BatchSize orqali keladi.
-     */
+
     @Query("""
         SELECT r FROM Result r
         LEFT JOIN FETCH r.answers a
@@ -24,10 +21,6 @@ public interface ResultRepository extends JpaRepository<Result, Long> {
     """)
     Optional<Result> findByIdWithAnswers(Long id);
 
-
-    /**
-     * Admin uchun - bitta natija to'liq (user + test bilan).
-     */
     @Query("""
         SELECT r FROM Result r
         JOIN FETCH r.user
@@ -36,11 +29,6 @@ public interface ResultRepository extends JpaRepository<Result, Long> {
     """)
     Optional<Result> findByIdWithUserAndTest(Long id);
 
-
-    /**
-     * Admin uchun - barcha natijalar (user + test bilan, pagination).
-     * COUNT query alohida (totalElements uchun).
-     */
     @Query(
             value = """
                 SELECT r FROM Result r
@@ -51,10 +39,6 @@ public interface ResultRepository extends JpaRepository<Result, Long> {
     )
     Page<Result> findAllWithUserAndTest(Pageable pageable);
 
-
-    /**
-     * User uchun - natijalarim (test bilan, pagination).
-     */
     @Query(
             value = """
                 SELECT r FROM Result r

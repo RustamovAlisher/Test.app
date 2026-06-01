@@ -12,13 +12,7 @@ import uz.testplatform.dto.result.ResultFull;
 import uz.testplatform.dto.result.ResultShort;
 import uz.testplatform.service.AdminResultService;
 
-/**
- * Admin Result Controller — admin uchun natija boshqaruvi.
- *
- * Endpoint'lar:
- *   GET /admin/results          → barcha natijalar (pagination)
- *   GET /admin/results/{id}     → bitta natija batafsil
- */
+
 @RestController
 @RequestMapping("/admin/results")
 @RequiredArgsConstructor
@@ -26,7 +20,6 @@ import uz.testplatform.service.AdminResultService;
 public class AdminResultController {
 
     private final AdminResultService adminResultService;
-
 
     @Operation(summary = "Barcha natijalar ro'yxati (pagination)")
     @GetMapping
@@ -38,7 +31,6 @@ public class AdminResultController {
         Page<ResultShort> results = adminResultService.getAllResults(pageable);
         return ResponseEntity.ok(results);
     }
-
 
     @Operation(summary = "Bitta natija batafsil (user va test bilan)")
     @GetMapping("/{id}")

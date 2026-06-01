@@ -13,15 +13,7 @@ import uz.testplatform.service.AdminQuestionService;
 
 import java.util.List;
 
-/**
- * Admin Question Controller — savol boshqaruvi.
- *
- * Endpointlar:
- *   POST   /admin/tests/{testId}/questions  → testga savol qo'shish
- *   GET    /admin/tests/{testId}/questions  → test savollari (daraja bilan)
- *   PUT    /admin/questions/{id}            → savol tahrirlash
- *   DELETE /admin/questions/{id}            → savol o'chirish
- */
+
 @RestController
 @RequiredArgsConstructor
 @Tag(name = "Admin Question", description = "Admin uchun savol boshqaruvi")

@@ -18,8 +18,8 @@ public record CreateQuestionRequest(
         @NotNull(message = "Savol darajasi bo'sh bo'lmasin")
         TestLevel level,
 
-        @NotEmpty(message = "Kamida 2 ta variant bo'lishi kerak")
-        @Size(min = 2, message = "Kamida 2 ta variant bo'lishi kerak")
+        @NotEmpty(message = " 2 ta variant bo'lishi kerak")
+        @Size(min = 2, message = " 2 ta variant bo'lishi kerak")
         @Valid
         List<CreateVariantRequest> variants
 ) {

@@ -23,8 +23,6 @@ public class AdminResultServiceImpl implements AdminResultService {
     private final ResultRepository resultRepository;
     private final ResultMapper resultMapper;
 
-
-    // Barcha natijalar - pagination bilan (JOIN FETCH, N+1 yo'q)
     @Override
     public Page<ResultShort> getAllResults(Pageable pageable) {
 
@@ -40,8 +38,6 @@ public class AdminResultServiceImpl implements AdminResultService {
         return responsePage;
     }
 
-
-    // Bitta natija batafsil
     @Override
     public ResultFull getResultById(Long resultId) {
 

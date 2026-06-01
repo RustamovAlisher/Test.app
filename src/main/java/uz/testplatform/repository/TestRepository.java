@@ -6,8 +6,4 @@ import uz.testplatform.entity.Test;
 
 @Repository
 public interface TestRepository extends JpaRepository<Test, Long> {
-    // JpaRepository asosiy metodlari yetadi:
-    // - findAll(pageable)  → pagination
-    // - findById(id)       → bitta test (savolsiz)
-    // - save, deleteById, existsById
 }

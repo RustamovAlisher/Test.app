@@ -41,29 +41,18 @@ public class AuthServiceImpl implements AuthService {
     public UserResponse register(RegisterRequest request) {
 
         log.info("Ro'yxatdan o'tish boshlandi: {}", request.email());
-
-        // Email band bo'lsa
         if (userRepository.existsByEmail(request.email())) {
             log.warn("Email allaqachon band: {}", request.email());
             throw new ConflictException("Bu email allaqachon ro'yxatdan o'tgan");
         }
-
-        // Passport band bo'lsa
         if (userRepository.existsByPassportCode(request.passportCode())) {
             log.warn("Pasport band: {}", request.passportCode());
             throw new ConflictException("Bu pasport kodi allaqachon ro'yxatdan o'tgan");
         }
-
-        // DTO -> Entity
         User user = userMapper.toEntity(request);
-
-        // Parolni BCrypt bilan shifrlash
         user.setPassword(passwordEncoder.encode(request.password()));
-
         User savedUser = userRepository.save(user);
-
         log.info("Yangi user yaratildi: id={}, email={}", savedUser.getId(), savedUser.getEmail());
-
         return userMapper.toResponse(savedUser);
     }
 
@@ -72,87 +61,60 @@ public class AuthServiceImpl implements AuthService {
     public LoginResponse login(LoginRequest request) {
 
         log.info("Login urinish: {}", request.email());
-
-        // Email bo'yicha topish
         User user = userRepository.findByEmail(request.email())
                 .orElseThrow(() -> {
                     log.warn("Login xato - email topilmadi: {}", request.email());
                     return new AuthorizationException("Email yoki parol noto'g'ri");
                 });
-
-        // Parolni BCrypt bilan tekshirish
         boolean passwordMatches = passwordEncoder.matches(request.password(), user.getPassword());
 
         if (!passwordMatches) {
             log.warn("Login xato - parol noto'g'ri: {}", request.email());
             throw new AuthorizationException("Email yoki parol noto'g'ri");
         }
-
-        // JWT token yaratish
         String token = jwtUtil.generateToken(user);
         LocalDateTime expiresAt = jwtUtil.getExpirationTime();
-
         log.info("Login muvaffaqiyatli: {}", user.getEmail());
-
         return new LoginResponse(token, user.getEmail(), user.getRole(), expiresAt);
     }
 
 
     @Override
     public void changeEmail(ChangeEmailRequest request, String currentUserEmail) {
-
         log.info("Email o'zgartirish: {} -> {}", currentUserEmail, request.newEmail());
-
         User user = userRepository.findByEmail(currentUserEmail)
                 .orElseThrow(() -> new NotFoundException("Foydalanuvchi topilmadi"));
-
-        // Ism tekshirish
         if (!user.getFirstName().equals(request.firstName())) {
             log.warn("Email o'zgartirish - ism mos kelmadi");
             throw new RequestException("Ma'lumotlar mos kelmadi");
         }
-
-        // Familiya tekshirish
         if (!user.getLastName().equals(request.lastName())) {
             log.warn("Email o'zgartirish - familiya mos kelmadi");
             throw new RequestException("Ma'lumotlar mos kelmadi");
         }
-
-        // Passport tekshirish
         if (!user.getPassportCode().equals(request.passportCode())) {
             log.warn("Email o'zgartirish - pasport mos kelmadi");
             throw new RequestException("Ma'lumotlar mos kelmadi");
         }
-
-        // Yangi email band bo'lmasligi kerak
         if (userRepository.existsByEmail(request.newEmail())) {
             log.warn("Yangi email band: {}", request.newEmail());
             throw new ConflictException("Bu email allaqachon band");
         }
-
-        // Token yaratish
         String token = UUID.randomUUID().toString();
         user.setNewEmail(request.newEmail());
         user.setConfirmationToken(token);
         user.setTokenExpiry(LocalDateTime.now().plusMinutes(30));
-
         userRepository.save(user);
-
-        // Email yuborish
         String fullName = user.getFirstName() + " " + user.getLastName();
         emailService.sendEmailChangeConfirmation(request.newEmail(), token, fullName);
-
         log.info("Email o'zgartirish linki yuborildi: {}", request.newEmail());
     }
 
 
     @Override
     public void confirmEmail(String token) {
-
         log.info("Email tasdiqlash urinishi");
-
         String cleanToken = token.trim();
-
         User user = userRepository.findByConfirmationToken(cleanToken)
                 .orElseThrow(() -> {
                     log.warn("Token topilmadi");
@@ -165,14 +127,11 @@ public class AuthServiceImpl implements AuthService {
         }
 
         String oldEmail = user.getEmail();
-
         user.setEmail(user.getNewEmail());
         user.setNewEmail(null);
         user.setConfirmationToken(null);
         user.setTokenExpiry(null);
-
         userRepository.save(user);
-
         log.info("Email o'zgartirildi: {} -> {}", oldEmail, user.getEmail());
     }
 }

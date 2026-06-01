@@ -46,13 +46,11 @@ public class AdminInitializer implements CommandLineRunner {
     @Override
     public void run(String... args) {
 
-        // Admin allaqachon bormi?
         if (userRepository.existsByEmail(adminEmail)) {
-            log.info("Admin allaqachon mavjud: {}", adminEmail);
+            log.info("Admin mavjud: {}", adminEmail);
             return;
         }
 
-        // Admin yaratish
         User admin = User.builder()
                 .firstName(adminFirstName)
                 .lastName(adminLastName)
@@ -64,11 +62,11 @@ public class AdminInitializer implements CommandLineRunner {
 
         userRepository.save(admin);
 
-        log.info("=========================================");
-        log.info("Yangi ADMIN yaratildi:");
+
+        log.info(" admin yaratildi:");
         log.info("  Email:    {}", adminEmail);
         log.info("  Parol:    {} (application.properties'da)", adminPassword);
         log.info("  Role:     ADMIN");
-        log.info("=========================================");
+
     }
 }
