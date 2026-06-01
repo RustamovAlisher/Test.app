@@ -2,7 +2,8 @@ package uz.testplatform.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import uz.testplatform.enums.TestLevel;
+import org.hibernate.annotations.BatchSize;
+import org.hibernate.annotations.DynamicUpdate;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -15,6 +16,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@DynamicUpdate
 public class Test {
 
     @Id
@@ -24,20 +26,20 @@ public class Test {
     @Column(nullable = false)
     private String title;
 
-    @Column(length = 1000)
-    private String description;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private TestLevel level;
-
     @Column(nullable = false)
     private Integer durationMinutes;
 
     @Column(nullable = false)
-    private Integer questionCount;
+    private Integer easyCount;
+
+    @Column(nullable = false)
+    private Integer mediumCount;
+
+    @Column(nullable = false)
+    private Integer hardCount;
 
     @OneToMany(mappedBy = "test", cascade = CascadeType.ALL, orphanRemoval = true)
+    @BatchSize(size = 50)
     @Builder.Default
     private List<Question> questions = new ArrayList<>();
 

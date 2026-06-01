@@ -33,7 +33,7 @@ public class EmailServiceImpl implements EmailService {
 
 
     @Override
-    public void sendEmailConfirmation(String email, String token, String userName) {
+    public void sendEmailChangeConfirmation (String email, String token, String userName) {
 
         log.info("Email yuborish boshlandi: {}", email);
 

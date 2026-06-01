@@ -1,29 +1,27 @@
 package uz.testplatform.dto.test;
 
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import uz.testplatform.enums.TestLevel;
+import jakarta.validation.constraints.*;
 
 public record UpdateTestRequest(
 
         @NotBlank(message = "Test nomi bo'sh bo'lmasin")
         String title,
 
-        String description,
-
-        @NotNull(message = "Test darajasi bo'sh bo'lmasin")
-        TestLevel level,
-
         @NotNull(message = "Davomiylik bo'sh bo'lmasin")
-        @Min(1)
-        @Max(300)
+        @Min(value = 1, message = "Davomiylik kamida 1 daqiqa bo'lishi kerak")
+        @Max(value = 300, message = "Davomiylik 300 daqiqadan oshmasin")
         Integer durationMinutes,
 
-        @NotNull(message = "Savollar soni bo'sh bo'lmasin")
-        @Min(1)
-        @Max(100)
-        Integer questionCount
+        @NotNull(message = "Easy savollar soni bo'sh bo'lmasin")
+        @Min(value = 0)
+        Integer easyCount,
+
+        @NotNull(message = "Medium savollar soni bo'sh bo'lmasin")
+        @Min(value = 0)
+        Integer mediumCount,
+
+        @NotNull(message = "Hard savollar soni bo'sh bo'lmasin")
+        @Min(value = 0)
+        Integer hardCount
 ) {
 }

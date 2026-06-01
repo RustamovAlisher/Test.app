@@ -2,93 +2,64 @@ package uz.testplatform.mapper;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import uz.testplatform.dto.question.CreateQuestionRequest;
-import uz.testplatform.dto.question.QuestionForUserResponse;
-import uz.testplatform.dto.question.QuestionResponse;
 import uz.testplatform.dto.test.CreateTestRequest;
 import uz.testplatform.dto.test.TestResponse;
-import uz.testplatform.dto.test.TestStartResponse;
 import uz.testplatform.dto.test.TestSummaryResponse;
-import uz.testplatform.entity.Question;
 import uz.testplatform.entity.Test;
-
-import java.time.LocalDateTime;
-import java.util.List;
-
 
 @Component
 @RequiredArgsConstructor
 public class TestMapper {
 
-    private final QuestionMapper questionMapper;
-
-
+    // DTO -> Entity (test yaratishda - savolsiz)
     public Test toEntity(CreateTestRequest request) {
-        Test test = Test.builder()
+        return Test.builder()
                 .title(request.title())
-                .description(request.description())
-                .level(request.level())
                 .durationMinutes(request.durationMinutes())
-                .questionCount(request.questionCount())
+                .easyCount(request.easyCount())
+                .mediumCount(request.mediumCount())
+                .hardCount(request.hardCount())
                 .build();
-
-        for (CreateQuestionRequest questionRequest : request.questions()) {
-            Question question = questionMapper.toEntity(questionRequest);
-            question.setTest(test);
-            test.getQuestions().add(question);
-        }
-
-        return test;
     }
 
 
-    public TestResponse toResponse(Test test) {
-        List<QuestionResponse> questionResponses = test.getQuestions().stream()
-                .map(questionMapper::toResponse)
-                .toList();
+    // Entity -> Response (statistika bilan)
+    public TestResponse toResponse(
+            Test test,
+            long easyAvailable,
+            long mediumAvailable,
+            long hardAvailable
+    ) {
+        // Test tayyormi - har darajada yetarli savol bormi
+        boolean isReady = easyAvailable >= test.getEasyCount()
+                && mediumAvailable >= test.getMediumCount()
+                && hardAvailable >= test.getHardCount();
 
         return new TestResponse(
                 test.getId(),
                 test.getTitle(),
-                test.getDescription(),
-                test.getLevel(),
                 test.getDurationMinutes(),
-                test.getQuestionCount(),
+                test.getEasyCount(),
+                test.getMediumCount(),
+                test.getHardCount(),
                 test.getCreatedAt(),
-                questionResponses
+                easyAvailable,
+                mediumAvailable,
+                hardAvailable,
+                isReady
         );
     }
 
 
+    // Entity -> Summary (ro'yxat uchun)
     public TestSummaryResponse toSummaryResponse(Test test) {
         return new TestSummaryResponse(
                 test.getId(),
                 test.getTitle(),
-                test.getDescription(),
-                test.getLevel(),
                 test.getDurationMinutes(),
-                test.getQuestionCount()
-        );
-    }
-
-
-    public TestStartResponse toStartResponse(
-            Test test,
-            List<Question> questions,
-            Long resultId,
-            LocalDateTime startedAt
-    ) {
-        List<QuestionForUserResponse> questionResponses = questions.stream()
-                .map(questionMapper::toUserResponse)
-                .toList();
-
-        return new TestStartResponse(
-                resultId,
-                test.getTitle(),
-                test.getLevel(),
-                test.getDurationMinutes(),
-                startedAt,
-                questionResponses
+                test.getEasyCount(),
+                test.getMediumCount(),
+                test.getHardCount()
         );
     }
 }

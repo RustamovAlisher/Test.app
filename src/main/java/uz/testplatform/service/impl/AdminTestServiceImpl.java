@@ -2,19 +2,21 @@ package uz.testplatform.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uz.testplatform.dto.test.CreateTestRequest;
 import uz.testplatform.dto.test.TestResponse;
+import uz.testplatform.dto.test.TestSummaryResponse;
 import uz.testplatform.dto.test.UpdateTestRequest;
 import uz.testplatform.entity.Test;
+import uz.testplatform.enums.TestLevel;
 import uz.testplatform.exception.NotFoundException;
 import uz.testplatform.mapper.TestMapper;
+import uz.testplatform.repository.QuestionRepository;
 import uz.testplatform.repository.TestRepository;
 import uz.testplatform.service.AdminTestService;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -23,9 +25,11 @@ import java.util.List;
 public class AdminTestServiceImpl implements AdminTestService {
 
     private final TestRepository testRepository;
+    private final QuestionRepository questionRepository;
     private final TestMapper testMapper;
 
 
+    // Yangi test yaratish (savolsiz)
     @Override
     public TestResponse createTest(CreateTestRequest request) {
 
@@ -36,10 +40,12 @@ public class AdminTestServiceImpl implements AdminTestService {
 
         log.info("Test yaratildi: id={}, title={}", savedTest.getId(), savedTest.getTitle());
 
-        return testMapper.toResponse(savedTest);
+        // Yangi test - hali savol yo'q, statistika 0
+        return buildTestResponse(savedTest);
     }
 
 
+    // Testni tahrirlash
     @Override
     public TestResponse updateTest(Long testId, UpdateTestRequest request) {
 
@@ -52,19 +58,20 @@ public class AdminTestServiceImpl implements AdminTestService {
                 });
 
         test.setTitle(request.title());
-        test.setDescription(request.description());
-        test.setLevel(request.level());
         test.setDurationMinutes(request.durationMinutes());
-        test.setQuestionCount(request.questionCount());
+        test.setEasyCount(request.easyCount());
+        test.setMediumCount(request.mediumCount());
+        test.setHardCount(request.hardCount());
 
         Test updatedTest = testRepository.save(test);
 
         log.info("Test yangilandi: id={}", updatedTest.getId());
 
-        return testMapper.toResponse(updatedTest);
+        return buildTestResponse(updatedTest);
     }
 
 
+    // Testni o'chirish
     @Override
     public void deleteTest(Long testId) {
 
@@ -81,24 +88,24 @@ public class AdminTestServiceImpl implements AdminTestService {
     }
 
 
+    // Barcha testlar ro'yxati (pagination, savolsiz)
     @Override
-    public List<TestResponse> getAllTests() {
+    public Page<TestSummaryResponse> getAllTests(Pageable pageable) {
 
-        log.info("Barcha testlar so'raldi");
+        log.info("Testlar so'raldi: page={}, size={}",
+                pageable.getPageNumber(), pageable.getPageSize());
 
-        List<Test> tests = testRepository.findAll();
+        Page<Test> testPage = testRepository.findAll(pageable);
+        Page<TestSummaryResponse> responsePage = testPage.map(testMapper::toSummaryResponse);
 
-        List<TestResponse> responses = new ArrayList<>();
-        for (Test test : tests) {
-            responses.add(testMapper.toResponse(test));
-        }
+        log.info("Topilgan testlar soni: {} (jami: {})",
+                responsePage.getNumberOfElements(), responsePage.getTotalElements());
 
-        log.info("Topilgan testlar soni: {}", responses.size());
-
-        return responses;
+        return responsePage;
     }
 
 
+    // Bitta testni ko'rish (statistika bilan)
     @Override
     public TestResponse getTestById(Long testId) {
 
@@ -110,6 +117,18 @@ public class AdminTestServiceImpl implements AdminTestService {
                     return new NotFoundException("Test topilmadi");
                 });
 
-        return testMapper.toResponse(test);
+        return buildTestResponse(test);
+    }
+
+
+    // Helper - test javobini statistika bilan tayyorlash
+    private TestResponse buildTestResponse(Test test) {
+
+        // Har darajadagi savollar sonini hisoblash (3 ta COUNT so'rovi)
+        long easyAvailable = questionRepository.countByTestIdAndLevel(test.getId(), TestLevel.EASY);
+        long mediumAvailable = questionRepository.countByTestIdAndLevel(test.getId(), TestLevel.MEDIUM);
+        long hardAvailable = questionRepository.countByTestIdAndLevel(test.getId(), TestLevel.HARD);
+
+        return testMapper.toResponse(test, easyAvailable, mediumAvailable, hardAvailable);
     }
 }

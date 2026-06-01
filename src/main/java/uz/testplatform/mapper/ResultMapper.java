@@ -12,22 +12,27 @@ import java.time.Duration;
 public class ResultMapper {
 
     public ResultShort toShort(Result result) {
+
         String userFullName = result.getUser().getFirstName()
                 + " "
                 + result.getUser().getLastName();
 
+        String pdfUrl = "/results/" + result.getResultCode() + "/pdf";
+        String qrUrl  = "/results/" + result.getResultCode() + "/qr";
+
         return new ResultShort(
                 result.getId(),
+                result.getResultCode(),
                 result.getTest().getTitle(),
-                result.getTest().getLevel(),
                 userFullName,
                 result.getTotalQuestions(),
                 result.getCorrectAnswers(),
                 result.getScore(),
                 result.getFinishedAt()
+
+
         );
     }
-
 
     public ResultFull toFull(Result result) {
         String userFullName = result.getUser().getFirstName()
@@ -46,7 +51,6 @@ public class ResultMapper {
                 result.getUser().getEmail(),
                 result.getUser().getPassportCode(),
                 result.getTest().getTitle(),
-                result.getTest().getLevel(),
                 result.getTotalQuestions(),
                 result.getCorrectAnswers(),
                 result.getScore(),

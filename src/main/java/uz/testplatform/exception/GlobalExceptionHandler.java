@@ -12,18 +12,12 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Global Exception Handler.
- *
- * Barcha xatolarni bir joyda boshqaradi.
- * Har xato uchun mos HTTP status code qaytaradi.
- */
+
 @RestControllerAdvice
 @Slf4j
 public class GlobalExceptionHandler {
 
 
-    // 404 Not Found - resurs topilmadi
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleNotFound(NotFoundException e) {
         log.warn("Resurs topilmadi: {}", e.getMessage());
@@ -31,7 +25,6 @@ public class GlobalExceptionHandler {
     }
 
 
-    // 400 Bad Request - noto'g'ri so'rov
     @ExceptionHandler(RequestException.class)
     public ResponseEntity<Map<String, Object>> handleRequest(RequestException e) {
         log.warn("Noto'g'ri so'rov: {}", e.getMessage());
@@ -39,7 +32,6 @@ public class GlobalExceptionHandler {
     }
 
 
-    // 409 Conflict - konflikt (email band, va h.k.)
     @ExceptionHandler(ConflictException.class)
     public ResponseEntity<Map<String, Object>> handleConflict(ConflictException e) {
         log.warn("Konflikt: {}", e.getMessage());
@@ -47,7 +39,6 @@ public class GlobalExceptionHandler {
     }
 
 
-    // 401 Unauthorized - avtorizatsiya muammosi
     @ExceptionHandler(AuthorizationException.class)
     public ResponseEntity<Map<String, Object>> handleAuthorization(AuthorizationException e) {
         log.warn("Avtorizatsiya muammosi: {}", e.getMessage());
@@ -55,7 +46,6 @@ public class GlobalExceptionHandler {
     }
 
 
-    // 400 Bad Request - @Valid validation xatosi
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException e) {
         String message = e.getBindingResult()
@@ -68,7 +58,6 @@ public class GlobalExceptionHandler {
     }
 
 
-    // 500 Internal Server Error - boshqa barcha kutilmagan xatolar
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGeneral(Exception e) {
         log.error("Kutilmagan xatolik: {}", e.getMessage(), e);

@@ -1,7 +1,5 @@
 package uz.testplatform.dto.result;
 
-import uz.testplatform.enums.TestLevel;
-
 import java.time.LocalDateTime;
 
 
@@ -12,7 +10,6 @@ public record ResultFull(
         String userEmail,
         String passportCode,
         String testTitle,
-        TestLevel testLevel,
         Integer totalQuestions,
         Integer correctAnswers,
         Integer score,
