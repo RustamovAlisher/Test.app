@@ -64,9 +64,9 @@ public class AdminInitializer implements CommandLineRunner {
 
 
         log.info(" admin yaratildi:");
-        log.info("  Email:    {}", adminEmail);
-        log.info("  Parol:    {} (application.properties'da)", adminPassword);
-        log.info("  Role:     ADMIN");
+        log.info("  Email: {}", adminEmail);
+        log.info("  Parol: {} (application.properties'da)", adminPassword);
+        log.info("  Role:  ADMIN");
 
     }
 }
