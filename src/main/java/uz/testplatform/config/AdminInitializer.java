@@ -11,14 +11,7 @@ import uz.testplatform.entity.User;
 import uz.testplatform.enums.Role;
 import uz.testplatform.repository.UserRepository;
 
-/**
- * Admin Initializer - dastur run bo'lganda admin yaratish.
- *
- * Agar application.properties'dagi email DB'da yo'q bo'lsa,
- * shu admin yaratiladi (BCrypt bilan shifrlangan parol).
- *
- * CommandLineRunner - dastur to'liq ishga tushgandan keyin chaqiriladi.
- */
+
 @Component
 @RequiredArgsConstructor
 @Slf4j

@@ -104,4 +104,37 @@ public class AdminQuestionServiceImpl implements AdminQuestionService {
 
         return responses;
     }
+
+
+    //butch hammasi bittada savollar ketadi
+    @Override
+    @Transactional
+    public List<QuestionResponse> addQuestions(Long testId, List<CreateQuestionRequest> requests) {
+
+        log.info("Bulk savol qo'shish: testId={}, soni={}", testId, requests.size());
+
+        Test test = testRepository.findById(testId)
+                .orElseThrow(() -> new NotFoundException("Test topilmadi"));
+
+        List<Question> questions = new ArrayList<>();
+
+        for (CreateQuestionRequest request : requests) {
+            Question question = questionMapper.toEntity(request);
+            question.setTest(test);
+            questions.add(question);
+        }
+
+        // Hammasi birga saqlash — batch insert!
+        List<Question> savedQuestions = questionRepository.saveAll(questions);
+
+        log.info("Bulk savollar saqlandi: testId={}, soni={}", testId, savedQuestions.size());
+
+        // Response yasash
+        List<QuestionResponse> responses = new ArrayList<>();
+        for (Question question : savedQuestions) {
+            responses.add(questionMapper.toResponse(question));
+        }
+
+        return responses;
+    }
 }

@@ -14,4 +14,5 @@ public interface AdminQuestionService {
     void deleteQuestion(Long questionId);
 
     List<QuestionResponse> getQuestionsByTest(Long testId);
-}
+
+    List<QuestionResponse> addQuestions(Long testId, List<CreateQuestionRequest> requests);}

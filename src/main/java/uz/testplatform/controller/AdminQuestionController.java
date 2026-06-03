@@ -58,4 +58,16 @@ public class AdminQuestionController {
         adminQuestionService.deleteQuestion(id);
         return ResponseEntity.ok("Savol muvaffaqiyatli o'chirildi");
     }
+
+
+
+    @Operation(summary = "Ko'p savol qo'shish - bulk (bitta so'rovda)")
+    @PostMapping("/{testId}/questions/bulk")
+    public ResponseEntity<List<QuestionResponse>> addQuestions(
+            @PathVariable Long testId,
+            @Valid @RequestBody List<CreateQuestionRequest> requests) {
+
+        List<QuestionResponse> responses = adminQuestionService.addQuestions(testId, requests);
+        return ResponseEntity.ok(responses);
+    }
 }
